@@ -2,6 +2,38 @@
 
 Implementación fullstack del producto definido en el Taller 4 - Ciclo de Vida del Producto Ágil.
 
+---
+
+## 🚀 Para probar el proyecto (Windows — un solo click)
+
+### Prerrequisitos (una sola vez)
+
+1. **Python 3.11+** → https://www.python.org/downloads/ — al instalar marca **"Add Python to PATH"**.
+2. **Node.js 18+** (versión LTS) → https://nodejs.org/.
+3. **Git** (opcional) → https://git-scm.com/download/win.
+
+### Pasos
+
+```bash
+git clone https://github.com/ruthyasmin18/tracker-dinamico.git
+cd tracker-dinamico
+start.bat
+```
+
+> **Sin Git**: descarga el ZIP desde [aquí](https://github.com/ruthyasmin18/tracker-dinamico/archive/refs/heads/main.zip) → descomprime → doble click en `start.bat`.
+
+La **primera ejecución** tarda 2-3 minutos (instala dependencias automáticamente). Las siguientes arrancan en segundos.
+
+Se abrirá:
+
+- Ventana **Tracker - Backend** → API en http://127.0.0.1:8000 (docs interactivas en `/docs`).
+- Ventana **Tracker - Frontend** → app en http://localhost:5173.
+- Tu navegador con la app lista para usar.
+
+Para **detener**: doble click en `stop.bat` o cierra las dos ventanas.
+
+---
+
 Desarrolla las funcionalidades:
 
 - **F2** Cálculo Inicial de Objetivos Nutricionales (fórmula Mifflin-St Jeor + distribución de macros).
