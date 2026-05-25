@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: tracker-dinamico-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ALLOW_ALL
+        value: "true"
+      - key: DATABASE_URL
+        value: sqlite:///./tracker.db

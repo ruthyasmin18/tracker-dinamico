@@ -18,6 +18,16 @@ class UserCreate(BaseModel):
     goal: Goal = Goal.maintain
 
 
+class UserUpdate(BaseModel):
+    """PATCH — todos los campos son opcionales."""
+    name: str | None = Field(default=None, min_length=1, max_length=80)
+    age: int | None = Field(default=None, ge=14, le=100)
+    weight_kg: float | None = Field(default=None, ge=30, le=300)
+    height_cm: float | None = Field(default=None, ge=100, le=250)
+    activity_level: ActivityLevel | None = None
+    goal: Goal | None = None
+
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

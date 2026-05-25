@@ -1,7 +1,9 @@
 // Cliente HTTP del backend
 import { storage } from './storage'
 
-const BASE = '/api'
+// En dev: VITE_API_URL no está definida → usa el proxy de Vite (/api)
+// En prod: VITE_API_URL = "https://tracker-dinamico-api.onrender.com" → llama directo al backend
+const BASE = (import.meta.env.VITE_API_URL ?? '') + '/api'
 
 type RequestOpts = RequestInit & { json?: unknown }
 
@@ -264,6 +266,15 @@ export const api = {
   }) => request<User>('/users', { method: 'POST', json: payload }),
 
   getUser: (id: string) => request<User>(`/users/${id}`),
+
+  updateUser: (id: string, payload: {
+    name?: string
+    age?: number
+    weight_kg?: number
+    height_cm?: number
+    activity_level?: ActivityLevel
+    goal?: GoalKind
+  }) => request<User>(`/users/${id}`, { method: 'PATCH', json: payload }),
 
   getGoal: (userId: string) => request<NutritionGoal>(`/users/${userId}/goal`),
 

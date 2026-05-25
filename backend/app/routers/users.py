@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import NutritionGoal, User
-from app.schemas import NutritionGoalOut, UserCreate, UserOut
+from app.schemas import NutritionGoalOut, UserCreate, UserOut, UserUpdate
 from app.services.nutrition import calculate_nutrition_goal
 
 
@@ -46,6 +46,49 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
         formula=result.formula,
     )
     db.add(goal)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.patch("/{user_id}", response_model=UserOut)
+def update_user(user_id: str, payload: UserUpdate, db: Session = Depends(get_db)):
+    """Actualiza datos del perfil y recalcula el objetivo nutricional si cambia algo relevante."""
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    recalc_fields = {"weight_kg", "height_cm", "age", "activity_level", "goal"}
+    needs_recalc = False
+
+    for field, value in payload.model_dump(exclude_none=True).items():
+        # Los enums llegan como objetos Enum; convertir a string para el modelo
+        db_value = value.value if hasattr(value, "value") else value
+        if field in recalc_fields and getattr(user, field) != db_value:
+            needs_recalc = True
+        setattr(user, field, db_value)
+
+    if needs_recalc:
+        result = calculate_nutrition_goal(
+            weight_kg=user.weight_kg,
+            height_cm=user.height_cm,
+            age=user.age,
+            gender=user.gender,
+            activity_level=user.activity_level,
+            goal=user.goal,
+        )
+        new_goal = NutritionGoal(
+            user_id=user.id,
+            kcal=result.kcal,
+            protein_g=result.protein_g,
+            carbs_g=result.carbs_g,
+            fat_g=result.fat_g,
+            bmr=result.bmr,
+            tdee=result.tdee,
+            formula=result.formula,
+        )
+        db.add(new_goal)
+
     db.commit()
     db.refresh(user)
     return user
