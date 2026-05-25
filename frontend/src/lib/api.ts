@@ -49,6 +49,7 @@ export interface AutoRecalcResponse {
 export interface User {
   id: string
   name: string
+  email?: string
   age: number
   weight_kg: number
   height_cm: number
@@ -188,6 +189,38 @@ export interface WorkoutPlan {
   days: WorkoutDay[]
 }
 
+// ===== F5 — Rutinas Express =====
+export interface ExpressRoutineRequest {
+  available_time_min: number
+  equipment: 'bodyweight' | 'dumbbell' | 'full'
+  target_muscle: 'all' | 'chest' | 'back' | 'legs' | 'arms' | 'shoulders' | 'core'
+  goal: GoalKind
+}
+
+// ===== F6 — Dashboard =====
+export interface DailyStats {
+  date: string
+  kcal_consumed: number
+  kcal_goal: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+  adherence_pct: number
+}
+
+export interface WeeklyDashboard {
+  user_id: string
+  period_start: string
+  period_end: string
+  adherence_pct: number
+  kcal_promedio: number
+  kcal_objetivo: number
+  racha_actual: number
+  dias_con_datos: number
+  macro_avg: { protein_g: number; carbs_g: number; fat_g: number }
+  daily_stats: DailyStats[]
+}
+
 export interface RecalcLog {
   id: string
   user_id: string
@@ -280,4 +313,12 @@ export const api = {
   getMealPlan: (userId: string) => request<MealPlan>(`/users/${userId}/meal-plan`),
 
   getWorkoutPlan: (userId: string) => request<WorkoutPlan>(`/users/${userId}/workout-plan`),
+
+  // F5 — Rutinas Express
+  generateExpressRoutine: (payload: ExpressRoutineRequest) =>
+    request<WorkoutDay>('/routines/quick', { method: 'POST', json: payload }),
+
+  // F6 — Dashboard semanal
+  getWeeklyDashboard: (userId: string) =>
+    request<WeeklyDashboard>(`/users/${userId}/dashboard/weekly`),
 }

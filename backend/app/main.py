@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 from app.config import settings
 from app.db import Base, engine
-from app.routers import auth, diary, plans, recalc, users
+from app.routers import auth, dashboard, diary, plans, recalc, routines, users
 
 
 def _migrate_db() -> None:
@@ -34,8 +34,10 @@ app = FastAPI(
         "API del producto Tracker Dinámico (Taller 4). Implementa las funcionalidades:\n"
         "- **F1** Gestión de Usuario y Sesión Persistente (bcrypt + JWT HS256 60 días).\n"
         "- **F2** Cálculo Inicial de Objetivos Nutricionales (Mifflin-St Jeor).\n"
-        "- **F3** Registro Diario de Alimentos con integración a OpenFoodFacts.\n"
-        "- **F4** Motor de Recálculo Dinámico (CORE)."
+        "- **F3** Registro Diario de Alimentos — búsqueda híbrida local + OpenFoodFacts.\n"
+        "- **F4** Motor de Recálculo Dinámico (CORE) con auto-detección desde diario.\n"
+        "- **F5** Generador de Rutinas Express adaptado a tiempo y equipo disponible.\n"
+        "- **F6** Dashboard de Progreso y Analítica semanal."
     ),
     version="1.0.0",
 )
@@ -53,6 +55,8 @@ app.include_router(users.router)
 app.include_router(diary.router)
 app.include_router(recalc.router)
 app.include_router(plans.router)
+app.include_router(routines.router)   # F5 — Generador de Rutinas Express
+app.include_router(dashboard.router)  # F6 — Dashboard de Progreso
 
 
 @app.get("/", tags=["meta"])

@@ -6,6 +6,8 @@ import Diary from './pages/Diary'
 import Recalc from './pages/Recalc'
 import Profile from './pages/Profile'
 import Plan from './pages/Plan'
+import Routines from './pages/Routines'
+import Dashboard from './pages/Dashboard'
 import { storage } from './lib/storage'
 
 function RequireUser({ children }: { children: React.ReactNode }) {
@@ -31,13 +33,15 @@ export default function App() {
           </RequireUser>
         }
       >
-        <Route path="/" element={<Navigate to="/plan" replace />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/plan" element={<Plan />} />
         <Route path="/diary" element={<Diary />} />
+        <Route path="/routines" element={<Routines />} />
         <Route path="/recalc" element={<Recalc />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
-      <Route path="*" element={<Navigate to="/plan" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   )
 }

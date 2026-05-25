@@ -249,6 +249,38 @@ class AutoRecalcRequest(BaseModel):
     target_date: date
 
 
+# ----- F5: Rutinas Express -----
+class ExpressRoutineRequest(BaseModel):
+    available_time_min: int = Field(ge=10, le=120, description="Minutos disponibles (10-120)")
+    equipment: str = Field(description="bodyweight | dumbbell | full")
+    target_muscle: str = Field(description="all | chest | back | legs | arms | shoulders | core")
+    goal: str = Field(default="maintain", description="lose | maintain | gain")
+
+
+# ----- F6: Dashboard de Progreso -----
+class DailyStats(BaseModel):
+    date: date
+    kcal_consumed: float
+    kcal_goal: float
+    protein_g: float
+    carbs_g: float
+    fat_g: float
+    adherence_pct: float   # 0-100, consumido / objetivo × 100
+
+
+class WeeklyDashboard(BaseModel):
+    user_id: str
+    period_start: date
+    period_end: date
+    adherence_pct: float        # promedio de los 7 días
+    kcal_promedio: float        # promedio consumido
+    kcal_objetivo: float        # objetivo diario
+    racha_actual: int           # días consecutivos con registro (desde hoy)
+    dias_con_datos: int         # días del período con al menos 1 entrada
+    macro_avg: dict[str, float] # proteína, carbs, grasa promedio diario
+    daily_stats: list[DailyStats]
+
+
 class RecalcLogOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
