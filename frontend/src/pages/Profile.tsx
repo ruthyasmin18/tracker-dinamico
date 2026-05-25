@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Flame, Beef, Wheat, Droplet, RefreshCw, User as UserIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Flame, Beef, Wheat, Droplet, RefreshCw, User as UserIcon, LogOut } from 'lucide-react'
 import { api } from '../lib/api'
 import { storage } from '../lib/storage'
 
@@ -19,6 +20,7 @@ const GOAL_LABELS: Record<string, string> = {
 export default function Profile() {
   const userId = storage.getUserId()!
   const qc = useQueryClient()
+  const navigate = useNavigate()
 
   const userQ = useQuery({ queryKey: ['user', userId], queryFn: () => api.getUser(userId) })
   const goalQ = useQuery({ queryKey: ['goal', userId], queryFn: () => api.getGoal(userId) })
@@ -26,6 +28,14 @@ export default function Profile() {
   const recalcM = useMutation({
     mutationFn: () => api.recalculateGoal(userId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['goal', userId] }),
+  })
+
+  const logoutM = useMutation({
+    mutationFn: () => api.logout(),
+    onSettled: () => {
+      storage.clear()
+      navigate('/onboarding')
+    },
   })
 
   if (userQ.isLoading || goalQ.isLoading) {
@@ -38,7 +48,17 @@ export default function Profile() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <h2 className="text-2xl font-bold text-slate-900">Tu perfil</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-slate-900">Tu perfil</h2>
+        <button
+          onClick={() => logoutM.mutate()}
+          disabled={logoutM.isPending}
+          className="flex items-center gap-2 text-sm text-slate-500 hover:text-red-600 transition disabled:opacity-50"
+        >
+          <LogOut className="w-4 h-4" />
+          Cerrar sesión
+        </button>
+      </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-4 mb-5">
@@ -47,6 +67,7 @@ export default function Profile() {
           </div>
           <div>
             <h3 className="font-bold text-lg text-slate-900">{u.name}</h3>
+            {u.email && <p className="text-xs text-slate-400">{u.email}</p>}
             <p className="text-sm text-slate-500">
               {u.age} años · {u.weight_kg} kg · {u.height_cm} cm
             </p>

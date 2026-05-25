@@ -1,14 +1,18 @@
 // Cliente HTTP del backend
+import { storage } from './storage'
+
 const BASE = '/api'
 
 type RequestOpts = RequestInit & { json?: unknown }
 
 async function request<T>(path: string, opts: RequestOpts = {}): Promise<T> {
   const { json, headers, ...rest } = opts
+  const token = storage.getToken()
   const res = await fetch(`${BASE}${path}`, {
     ...rest,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
     body: json !== undefined ? JSON.stringify(json) : rest.body,
@@ -26,6 +30,21 @@ export type Gender = 'male' | 'female'
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active'
 export type GoalKind = 'lose' | 'maintain' | 'gain'
 export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+
+// F1 — Auth
+export interface TokenOut {
+  access_token: string
+  token_type: string
+  user_id: string
+}
+
+// F4 — Auto-recálculo
+export interface AutoRecalcResponse {
+  adjusted: boolean
+  message: string
+  days: DayPlan[]
+  log_id?: string
+}
 
 export interface User {
   id: string
@@ -88,6 +107,7 @@ export interface DiarySummary {
   totals: { kcal: number; protein_g: number; carbs_g: number; fat_g: number }
   goal: NutritionGoal | null
   remaining: { kcal: number; protein_g: number; carbs_g: number; fat_g: number }
+  recalc_suggestion: AutoRecalcResponse | null
 }
 
 export interface MacroPlan {
@@ -184,6 +204,22 @@ export interface RecalcLog {
 
 // ===== Calls =====
 export const api = {
+  // F1 — Auth
+  register: (payload: {
+    name: string
+    email: string
+    password: string
+    age: number
+    weight_kg: number
+    height_cm: number
+    gender: Gender
+    activity_level: ActivityLevel
+    goal: GoalKind
+  }) => request<TokenOut>('/auth/register', { method: 'POST', json: payload }),
+
+  login: (payload: { email: string; password: string }) =>
+    request<TokenOut>('/auth/login', { method: 'POST', json: payload }),
+
   createUser: (payload: {
     name: string
     age: number
@@ -232,6 +268,14 @@ export const api = {
   }) => request<RecalcResponse>('/recalc/event', { method: 'POST', json: payload }),
 
   getLogs: (userId: string) => request<RecalcLog[]>(`/recalc/users/${userId}/logs`),
+
+  autoRecalc: (userId: string, targetDate: string) =>
+    request<AutoRecalcResponse>('/recalc/auto', {
+      method: 'POST',
+      json: { user_id: userId, target_date: targetDate },
+    }),
+
+  logout: () => request<void>('/auth/logout', { method: 'POST' }),
 
   getMealPlan: (userId: string) => request<MealPlan>(`/users/${userId}/meal-plan`),
 

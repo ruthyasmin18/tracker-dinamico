@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models import ActivityLevel, Gender, Goal, Meal
 
@@ -23,6 +23,7 @@ class UserOut(BaseModel):
 
     id: str
     name: str
+    email: str | None = None
     age: int
     weight_kg: float
     height_cm: float
@@ -30,6 +31,46 @@ class UserOut(BaseModel):
     activity_level: str
     goal: str
     created_at: datetime
+
+
+# ----- Auth (F1) -----
+import re
+
+
+class AuthRegister(UserCreate):
+    """Registro con email + contraseña + perfil biométrico."""
+    email: str = Field(min_length=5, max_length=200)
+    password: str = Field(min_length=8, max_length=100)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        errors = []
+        if not re.search(r"[A-Z]", v):
+            errors.append("1 mayúscula")
+        if not re.search(r"\d", v):
+            errors.append("1 número")
+        if not re.search(r"[!@#$%^&*()\-_=+\[\]{};:'\",.<>/?\\|`~]", v):
+            errors.append("1 carácter especial (!@#$...)")
+        if errors:
+            raise ValueError(f"La contraseña necesita: {', '.join(errors)}")
+        return v
+
+
+class AuthLogin(BaseModel):
+    email: str
+    password: str
+
+
+class TokenOut(BaseModel):
+    """Respuesta de autenticación: JWT + user_id para el cliente."""
+    access_token: str
+    token_type: str = "bearer"
+    user_id: str
+
+
+class RefreshTokenIn(BaseModel):
+    access_token: str
 
 
 # ----- NutritionGoal -----
@@ -94,12 +135,21 @@ class FoodEntryOut(BaseModel):
     fat_g: float
 
 
+class AutoRecalcResponse(BaseModel):
+    """Respuesta del motor de recálculo automático (F4 ↔ F3)."""
+    adjusted: bool
+    message: str
+    days: list["DayPlan"] = []
+    log_id: str | None = None
+
+
 class DiarySummary(BaseModel):
     consumed_on: date
     entries: list[FoodEntryOut]
     totals: dict[str, float]
     goal: NutritionGoalOut | None
     remaining: dict[str, float]
+    recalc_suggestion: AutoRecalcResponse | None = None  # F4 ↔ F3: ajuste automático
 
 
 # ----- Recalc -----
@@ -192,6 +242,11 @@ class WorkoutPlanOut(BaseModel):
     activity_level: str
     goal: str
     days: list[WorkoutDayOut]
+
+
+class AutoRecalcRequest(BaseModel):
+    user_id: str
+    target_date: date
 
 
 class RecalcLogOut(BaseModel):

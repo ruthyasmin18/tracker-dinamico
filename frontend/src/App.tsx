@@ -10,7 +10,9 @@ import { storage } from './lib/storage'
 
 function RequireUser({ children }: { children: React.ReactNode }) {
   const userId = storage.getUserId()
-  if (!userId) return <Navigate to="/onboarding" replace />
+  const token = storage.getToken()
+  // Requiere ambos: user_id y token JWT válido (F1 — sesión persistente)
+  if (!userId || !token) return <Navigate to="/onboarding" replace />
   return <>{children}</>
 }
 

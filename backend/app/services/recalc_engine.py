@@ -16,7 +16,7 @@ comida, recorte de tiempo de entrenamiento), este motor:
 Salida: plan original vs ajustado, día por día, con mensaje accionable.
 """
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import numpy as np
 
@@ -142,6 +142,28 @@ def _clamp_to_safe_deficit(adjusted: MacroSet, baseline: MacroSet) -> MacroSet:
         carbs_g=adjusted.carbs_g + extra_carbs,
         fat_g=adjusted.fat_g,
     )
+
+
+AUTO_RECALC_THRESHOLD = 0.15   # 15% de desviación respecto al objetivo = trigger
+
+
+def compute_diary_deviation(entries: list, goal) -> float:
+    """Calcula delta_kcal según la fórmula del informe (F4):
+
+        delta_kcal = consumido_actual − kcal_objetivo_acumuladas_a_esta_hora
+
+    Positivo → exceso calórico. Negativo → déficit.
+
+    Usa la fracción del día transcurrida para saber cuántas kcal
+    se esperaban consumir hasta este momento (distribución uniforme).
+    El mínimo es 25% del día para evitar falsos positivos a primera hora.
+    """
+    consumed = sum(e.kcal for e in entries)
+    now = datetime.now(timezone.utc)
+    current_hour = now.hour + now.minute / 60
+    day_fraction = max(current_hour / 24, 0.25)   # al menos 25%
+    expected_by_now = goal.kcal * day_fraction
+    return consumed - expected_by_now
 
 
 def run_recalc(

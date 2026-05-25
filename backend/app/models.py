@@ -47,6 +47,8 @@ class User(Base):
     __tablename__ = "users"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     name: Mapped[str] = mapped_column(String, nullable=False)
+    email: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
+    password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
     age: Mapped[int] = mapped_column(Integer, nullable=False)
     weight_kg: Mapped[float] = mapped_column(Float, nullable=False)
     height_cm: Mapped[float] = mapped_column(Float, nullable=False)
@@ -54,6 +56,7 @@ class User(Base):
     activity_level: Mapped[str] = mapped_column(String, nullable=False)
     goal: Mapped[str] = mapped_column(String, nullable=False, default=Goal.maintain.value)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     nutrition_goals: Mapped[list["NutritionGoal"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     food_entries: Mapped[list["FoodEntry"]] = relationship(back_populates="user", cascade="all, delete-orphan")

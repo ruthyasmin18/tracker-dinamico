@@ -3,8 +3,8 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid,
 } from 'recharts'
-import { Sparkles, AlertTriangle, Coffee, Timer, History, Zap } from 'lucide-react'
-import { api, DayPlan, RecalcResponse } from '../lib/api'
+import { Sparkles, AlertTriangle, Coffee, Timer, History, Zap, BookOpen } from 'lucide-react'
+import { api, AutoRecalcResponse, DayPlan, RecalcResponse } from '../lib/api'
 import { storage } from '../lib/storage'
 
 function todayIso(): string {
@@ -50,6 +50,19 @@ export default function Recalc() {
     queryFn: () => api.getLogs(userId),
   })
 
+  // Auto-detección desde el diario (F4 ↔ F3)
+  const autoMut = useMutation({
+    mutationFn: () => api.autoRecalc(userId, todayIso()),
+    onSuccess: (res: AutoRecalcResponse) => {
+      if (res.adjusted) {
+        setResponse(res as unknown as RecalcResponse)
+        logsQ.refetch()
+      } else {
+        alert(res.message)
+      }
+    },
+  })
+
   const mut = useMutation({
     mutationFn: () =>
       api.reportEvent({
@@ -73,14 +86,24 @@ export default function Recalc() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-5 h-5 text-brand-600" />
-          <h2 className="text-2xl font-bold text-slate-900">Motor de Recálculo Dinámico</h2>
+      <div className="flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles className="w-5 h-5 text-brand-600" />
+            <h2 className="text-2xl font-bold text-slate-900">Motor de Recálculo Dinámico</h2>
+          </div>
+          <p className="text-slate-500 text-sm">
+            Reporta un imprevisto o deja que el motor detecte la desviación de tu diario automáticamente.
+          </p>
         </div>
-        <p className="text-slate-500 text-sm">
-          Reporta un imprevisto y el plan se autoajusta sin culpa. <span className="font-medium text-slate-700">Esto es el CORE del producto.</span>
-        </p>
+        <button
+          onClick={() => autoMut.mutate()}
+          disabled={autoMut.isPending}
+          className="flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold rounded-lg shadow-sm transition disabled:opacity-50 shrink-0"
+        >
+          <BookOpen className="w-4 h-4" />
+          {autoMut.isPending ? 'Analizando diario…' : 'Detectar desde mi diario de hoy'}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

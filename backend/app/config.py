@@ -10,5 +10,10 @@ class Settings(BaseSettings):
     openfoodfacts_user_agent: str = "TrackerDinamico/1.0 (taller4@universidad.edu)"
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
 
+    # F1 — Autenticación JWT
+    jwt_secret: str = "dev-secret-change-in-production-use-env-var"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_days: int = 60  # sesión persistente 60 días
+
 
 settings = Settings()
